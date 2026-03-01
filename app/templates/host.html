@@ -16,7 +16,16 @@
   <section id="room" class="hidden">
     <h2>Room <span id="code"></span></h2>
     <p>Share: <code id="joinUrl"></code></p>
+    <div class="card">
+      <h3>Phase Timers (seconds)</h3>
+      <input id="morning" type="number" value="15" min="5" />
+      <input id="discussion" type="number" value="90" min="10" />
+      <input id="nomination" type="number" value="45" min="10" />
+      <input id="runoff" type="number" value="45" min="10" />
+      <button onclick="saveSettings()">Save timers</button>
+    </div>
     <button onclick="startGame()">Start game</button>
+    <button onclick="resetGame()">Reset game</button>
     <button onclick="advance()">Advance phase</button>
     <button onclick="saveSeatOrder()">Save circle seats</button>
     <div id="state"></div>

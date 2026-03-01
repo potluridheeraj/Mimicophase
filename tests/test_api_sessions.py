@@ -10,6 +10,7 @@ client = TestClient(app)
 def setup_function():
     store.rooms.clear()
     store.sessions.clear()
+    store.last_seen.clear()
 
 
 def test_join_and_rejoin_sticky_session():

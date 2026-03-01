@@ -7,6 +7,10 @@ This repository now contains a **fully local-network playable prototype** inspir
 - Session stickiness is supported via browser local storage (refresh/reopen retains identity token).
 - Host can reorder players in a **seating circle** in lobby so adjacency-based effects are deterministic.
 - Rejoin endpoint restores users to the same stage/room if they come back.
+- Players can view/copy their reconnect token in the player page for manual rejoin if local storage is cleared.
+- Disconnected players are temporarily excluded from active voting/action counts until they reconnect.
+- Host can kick disconnected/stalled players and reset a game mid-match if needed.
+- Host can configure phase timers before start; voting phases auto-complete early when all connected players submit votes.
 
 ## Run locally
 

@@ -18,13 +18,16 @@ async function joinRoom() {
   token = data.token;
   localStorage.setItem('player_token', token);
   localStorage.setItem('room_code', code);
+  document.getElementById('savedToken').value = token;
   document.getElementById('game').classList.remove('hidden');
 }
 
 async function rejoinRoom() {
   code = document.getElementById('code').value.toUpperCase() || localStorage.getItem('room_code');
-  token = localStorage.getItem('player_token');
+  token = document.getElementById('savedToken').value || localStorage.getItem('player_token');
   await api('/api/room/rejoin','POST',{code,token});
+  localStorage.setItem('player_token', token);
+  localStorage.setItem('room_code', code);
   document.getElementById('game').classList.remove('hidden');
 }
 
@@ -41,11 +44,12 @@ function actionButtons(state) {
   const targetButtons = (endpoint) => living.map(p => `<button onclick="act('${endpoint}','${p.id}')">${p.name}</button>`).join('');
 
   if (!state.you.alive) return '<p>You are eliminated.</p>';
+  if (!state.you.connected) return '<p>You are currently disconnected by timeout. Press Rejoin saved session.</p>';
   if (state.phase === 'night_mimic' && state.you.role === 'mimicophase') return `<h3>Mimic target</h3>${targetButtons('/api/night/mimic')}`;
   if (state.phase === 'night_captain' && state.you.role === 'captain') return `<h3>Captain inspect</h3>${targetButtons('/api/night/captain')}`;
   if (state.phase === 'night_doctor' && state.you.role === 'doctor') return `<h3>Doctor protect</h3>${targetButtons('/api/night/doctor')}`;
   if (state.phase === 'nomination') return `<h3>Nominate</h3>${targetButtons('/api/day/nominate')}`;
-  if (state.phase === 'runoff') return `<h3>Vote runoff</h3>${state.runoff_candidates.map(c=>`<button onclick=\"vote('${c.id}')\">${c.name}</button>`).join('')}`;
+  if (state.phase === 'runoff') return `<h3>Vote runoff</h3>${state.runoff_candidates.map(c=>`<button onclick="vote('${c.id}')">${c.name}</button>`).join('')}`;
   if (state.phase === 'single_nominee') return `<button onclick="vote('execute')">Execute</button><button onclick="vote('reject')">Reject</button>`;
   return '<p>Waiting...</p>';
 }
@@ -53,12 +57,15 @@ function actionButtons(state) {
 async function poll() {
   if (!token || !code) return;
   try {
+    await api('/api/ping','POST',{token,target:''});
     const state = await api(`/api/state/${code}?token=${encodeURIComponent(token)}`);
     document.getElementById('game').classList.remove('hidden');
     document.getElementById('roomCode').textContent = state.code;
+    document.getElementById('savedToken').value = state.you.token || token;
     document.getElementById('playerState').innerHTML = `
       <p>You: <b>${state.you.name}</b> | Role: <b>${state.you.role ?? 'hidden'}</b></p>
-      <p>Phase: <b>${state.phase}</b> | Winner: ${state.winner ?? '-'}</p>
+      <p>Phase: <b>${state.phase}</b> | Winner: ${state.winner ?? '-'} | Timer: ${state.seconds_left ?? '-'}s</p>
+      <p>Connection: ${state.you.connected ? '🟢 Connected' : '🔴 Disconnected'} | Token saved below for manual rejoin</p>
       <p>Mimic teammates: ${state.you.teammates.join(', ') || '-'}</p>
       <p>Morning deaths: ${state.morning_deaths.join(', ') || 'No deaths'}</p>
     `;
