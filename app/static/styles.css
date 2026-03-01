@@ -1,0 +1,8 @@
+body { font-family: Arial, sans-serif; margin: 0; background: #111827; color: #e5e7eb; }
+.container { max-width: 900px; margin: 0 auto; padding: 1rem; }
+.center { text-align: center; margin-top: 4rem; }
+input, button, select { padding: .6rem; margin: .2rem; border-radius: .5rem; border: 1px solid #374151; }
+button, .button { background: #2563eb; color: white; text-decoration: none; border: none; display: inline-block; }
+.hidden { display: none; }
+.card { background: #1f2937; padding: .75rem; border-radius: .5rem; margin: .4rem 0; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .4rem; }

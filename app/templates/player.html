@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Play | Mimicophase</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<main class="container">
+  <h1>Join Room</h1>
+  <section>
+    <input id="code" placeholder="ROOM" maxlength="4" />
+    <input id="name" placeholder="Your name" />
+    <input id="savedToken" placeholder="Saved token (for manual rejoin)" />
+    <button onclick="joinRoom()">Join</button>
+    <button onclick="rejoinRoom()">Rejoin saved session</button>
+  </section>
+  <section id="game" class="hidden">
+    <h2>Room <span id="roomCode"></span></h2>
+    <div id="playerState"></div>
+    <div id="actions"></div>
+  </section>
+</main>
+<script src="/static/player.js"></script>
+</body>
+</html>

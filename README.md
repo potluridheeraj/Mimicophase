@@ -1,3 +1,41 @@
+
+# Mimicophase Local (Classic Mimicophase Variant)
+
+This repository now contains a **fully local-network playable prototype** inspired by Jackbox-style host/player flow:
+
+- A host starts one room from a laptop/desktop.
+- Players join from any browser/device on the same network.
+- Session stickiness is supported via browser local storage (refresh/reopen retains identity token).
+- Host can reorder players in a **seating circle** in lobby so adjacency-based effects are deterministic.
+- Rejoin endpoint restores users to the same stage/room if they come back.
+- Players can view/copy their reconnect token in the player page for manual rejoin if local storage is cleared.
+- Disconnected players are temporarily excluded from active voting/action counts until they reconnect.
+- Host can kick disconnected/stalled players and reset a game mid-match if needed.
+- Host can configure phase timers before start; voting phases auto-complete early when all connected players submit votes.
+
+## Run locally
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+uvicorn app.main:app --host 0.0.0.0 --port 8000
+```
+
+Then open:
+- Host: `http://<host-lan-ip>:8000/host`
+- Players: `http://<host-lan-ip>:8000/play`
+
+## Test
+
+```bash
+pytest -q
+```
+
+---
+
+## Gameplay Specification (Canonical Rules)
+
 # Mimicophase (Classic Mimicophase Variant) — Core Rules & Gameplay Details
 
 This is the **game-only** specification (no system design, architecture, deployment, or UI).
