@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Host | Mimicophase</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+<main class="container">
+  <h1>Host Panel</h1>
+  <section id="create">
+    <input id="hostName" placeholder="Host name" value="Host" />
+    <button onclick="createRoom()">Create room</button>
+  </section>
+  <section id="room" class="hidden">
+    <h2>Room <span id="code"></span></h2>
+    <p>Share: <code id="joinUrl"></code></p>
+    <button onclick="startGame()">Start game</button>
+    <button onclick="advance()">Advance phase</button>
+    <button onclick="saveSeatOrder()">Save circle seats</button>
+    <div id="state"></div>
+  </section>
+</main>
+<script src="/static/host.js"></script>
+</body>
+</html>
