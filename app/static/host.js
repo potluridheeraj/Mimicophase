@@ -59,9 +59,14 @@ async function poll() {
     document.getElementById('create').classList.add('hidden');
     document.getElementById('room').classList.remove('hidden');
     document.getElementById('code').textContent = code;
+    const announcement = state.host_announcement || {text: ''};
     const players = state.players.map(p => `<div class="card">#${p.seat+1} ${p.name} ${p.alive ? '' : '☠️'} ${p.connected ? '🟢' : '🔴'} <button onclick="kick('${p.id}')">Kick</button></div>`).join('');
     document.getElementById('state').innerHTML = `
       <p>Phase: <b>${state.phase}</b> | Cycle ${state.cycle} | Timer: ${state.seconds_left ?? '-'}s</p>
+      <div class="card">
+        <h3>Host announcement</h3>
+        <p>${announcement.text || 'No announcement.'}</p>
+      </div>
       <div class="grid">${players}</div>
       ${renderSeatEditor(state.players)}
       <p>Morning: ${state.morning_deaths.length ? state.morning_deaths.join(', ') : 'No deaths'}</p>`;
