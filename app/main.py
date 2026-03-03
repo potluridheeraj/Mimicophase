@@ -313,7 +313,7 @@ def mimic_action(payload: ActionIn):
         raise HTTPException(status_code=403, detail="Mimicophase only")
     if room.phase != Phase.NIGHT_MIMIC:
         raise HTTPException(status_code=400, detail="Wrong phase")
-    room.set_unanimous_action(Role.MIMICOPHASE, payload.target)
+    room.set_unanimous_action(Role.MIMICOPHASE, payload.target, actor_id=info.player_id)
     _log_action(action="night.mimic", token=payload.token, room_code=room.code, target=payload.target)
     return {"ok": True}
 
@@ -327,7 +327,7 @@ def captain_action(payload: ActionIn):
         raise HTTPException(status_code=403, detail="Captain only")
     if room.phase != Phase.NIGHT_CAPTAIN:
         raise HTTPException(status_code=400, detail="Wrong phase")
-    room.set_unanimous_action(Role.CAPTAIN, payload.target)
+    room.set_unanimous_action(Role.CAPTAIN, payload.target, actor_id=info.player_id)
     _log_action(action="night.captain", token=payload.token, room_code=room.code, target=payload.target)
     return {"ok": True}
 
@@ -395,6 +395,9 @@ def vote(payload: VoteIn):
 @app.post("/api/host/finalize-vote")
 def finalize_vote(payload: ActionIn):
     room = _require_host(payload.token)
-    eliminated = room.finalize_runoff()
-    _log_action(action="host.finalize_vote", token=payload.token, room_code=room.code, target=eliminated, details=f"new_phase={room.phase.value}")
-    return {"ok": True, "eliminated": eliminated, "phase": room.phase.value}
+    try:
+        eliminated = room.finalize_runoff()
+        _log_action(action="host.finalize_vote", token=payload.token, room_code=room.code, target=eliminated, details=f"new_phase={room.phase.value}")
+        return {"ok": True, "eliminated": eliminated, "phase": room.phase.value}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
