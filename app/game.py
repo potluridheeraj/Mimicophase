@@ -192,8 +192,14 @@ class GameRoom:
             next_phase = Phase.NIGHT_DOCTOR
             choice_attr = "captain_choice"
 
+        # Keep vote state aligned with currently active voters so disconnects/reconnects
+        # don't leave stale votes that can block unanimity.
+        for pid in list(votes.keys()):
+            if pid not in voters:
+                votes.pop(pid, None)
+
         votes[actor_id] = target_id
-        if len(votes) != len(voters):
+        if any(pid not in votes for pid in voters):
             return
 
         selections = {votes[pid] for pid in voters}
