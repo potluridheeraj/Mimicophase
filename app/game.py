@@ -44,6 +44,8 @@ class NightActions:
     mimic_choice: Optional[str] = None
     captain_choice: Optional[str] = None
     doctor_choice: Optional[str] = None
+    mimic_votes: Dict[str, str] = field(default_factory=dict)
+    captain_votes: Dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -149,20 +151,58 @@ class GameRoom:
             self.phase_deadline = None
         return self.winner
 
-    def set_unanimous_action(self, role: Role, target_id: str) -> None:
+    def set_unanimous_action(self, role: Role, target_id: str, actor_id: Optional[str] = None) -> None:
         if target_id not in self.players or not self.players[target_id].alive or self.players[target_id].kicked:
             raise ValueError("Target must be a living player")
 
         if role == Role.MIMICOPHASE:
             if self.players[target_id].role == Role.MIMICOPHASE:
                 raise ValueError("Mimicophase must target non-Mimicophase")
-            self.night_actions.mimic_choice = target_id
-            self.phase = Phase.NIGHT_CAPTAIN
+            if actor_id is None:
+                self.night_actions.mimic_choice = target_id
+                self.phase = Phase.NIGHT_CAPTAIN
+                return
+            self._record_unanimous_vote(Role.MIMICOPHASE, actor_id, target_id)
         elif role == Role.CAPTAIN:
-            self.night_actions.captain_choice = target_id
-            self.phase = Phase.NIGHT_DOCTOR
+            if actor_id is None:
+                self.night_actions.captain_choice = target_id
+                self.phase = Phase.NIGHT_DOCTOR
+                return
+            self._record_unanimous_vote(Role.CAPTAIN, actor_id, target_id)
         else:
             raise ValueError("Invalid unanimous action role")
+
+    def _record_unanimous_vote(self, role: Role, actor_id: str, target_id: str) -> None:
+        if actor_id not in self.players:
+            raise ValueError("Unknown actor")
+        actor = self.players[actor_id]
+        if actor.role != role or not actor.alive or actor.kicked or not actor.connected:
+            raise ValueError("Only connected living players in role can vote")
+
+        voters = sorted(self.alive_by_role(role, active_only=True))
+        if not voters:
+            raise ValueError("No eligible voters")
+
+        if role == Role.MIMICOPHASE:
+            votes = self.night_actions.mimic_votes
+            next_phase = Phase.NIGHT_CAPTAIN
+            choice_attr = "mimic_choice"
+        else:
+            votes = self.night_actions.captain_votes
+            next_phase = Phase.NIGHT_DOCTOR
+            choice_attr = "captain_choice"
+
+        votes[actor_id] = target_id
+        if len(votes) != len(voters):
+            return
+
+        selections = {votes[pid] for pid in voters}
+        if len(selections) != 1:
+            return
+
+        setattr(self.night_actions, choice_attr, target_id)
+        votes.clear()
+        self.phase = next_phase
 
     def set_doctor_action(self, target_id: str) -> None:
         if target_id not in self.players or not self.players[target_id].alive or self.players[target_id].kicked:

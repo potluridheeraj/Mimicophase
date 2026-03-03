@@ -212,7 +212,7 @@ def mimic_action(payload: ActionIn):
         raise HTTPException(status_code=403, detail="Mimicophase only")
     if room.phase != Phase.NIGHT_MIMIC:
         raise HTTPException(status_code=400, detail="Wrong phase")
-    room.set_unanimous_action(Role.MIMICOPHASE, payload.target)
+    room.set_unanimous_action(Role.MIMICOPHASE, payload.target, actor_id=info.player_id)
     return {"ok": True}
 
 
@@ -225,7 +225,7 @@ def captain_action(payload: ActionIn):
         raise HTTPException(status_code=403, detail="Captain only")
     if room.phase != Phase.NIGHT_CAPTAIN:
         raise HTTPException(status_code=400, detail="Wrong phase")
-    room.set_unanimous_action(Role.CAPTAIN, payload.target)
+    room.set_unanimous_action(Role.CAPTAIN, payload.target, actor_id=info.player_id)
     return {"ok": True}
 
 
