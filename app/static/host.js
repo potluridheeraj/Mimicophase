@@ -28,13 +28,69 @@ async function resetGame() { await api('/api/host/reset','POST',{token,target:''
 async function advance() { await api('/api/host/advance','POST',{token,target:''}); }
 
 function renderSeatEditor(players) {
-  return `<h3>Seat order (comma-separated IDs)</h3>
-  <div class="card">${players.map(p=>`${p.name} (${p.id.slice(0,6)})`).join(' → ')}</div>
-  <input id="seatOrder" value="${players.map(p=>p.id).join(',')}" />`;
+  return `<h3>Seat order (drag and drop)</h3>
+  <p class="muted">Drag a player card to reorder seats, then click <b>Save circle seats</b>.</p>
+  <ul id="seatList" class="seat-list">
+    ${players.map((p, index) => `
+      <li class="seat-item" draggable="true" data-player-id="${p.id}">
+        <span class="seat-number">#${index + 1}</span>
+        <span>${p.name} (${p.id.slice(0,6)})</span>
+      </li>
+    `).join('')}
+  </ul>`;
+}
+
+function setupSeatDragAndDrop() {
+  const seatList = document.getElementById('seatList');
+  if (!seatList) return;
+
+  let draggingItem = null;
+
+  seatList.querySelectorAll('.seat-item').forEach((item) => {
+    item.addEventListener('dragstart', () => {
+      draggingItem = item;
+      item.classList.add('dragging');
+    });
+
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      draggingItem = null;
+    });
+
+    item.addEventListener('dragover', (event) => {
+      event.preventDefault();
+    });
+
+    item.addEventListener('drop', (event) => {
+      event.preventDefault();
+      if (!draggingItem || draggingItem === item) return;
+
+      const listItems = Array.from(seatList.children);
+      const draggingIndex = listItems.indexOf(draggingItem);
+      const targetIndex = listItems.indexOf(item);
+
+      if (draggingIndex < targetIndex) {
+        seatList.insertBefore(draggingItem, item.nextSibling);
+      } else {
+        seatList.insertBefore(draggingItem, item);
+      }
+
+      updateSeatNumbers();
+    });
+  });
+}
+
+function updateSeatNumbers() {
+  document.querySelectorAll('#seatList .seat-item').forEach((item, index) => {
+    const label = item.querySelector('.seat-number');
+    if (label) label.textContent = `#${index + 1}`;
+  });
 }
 
 async function saveSeatOrder() {
-  const ordered_ids = document.getElementById('seatOrder').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const ordered_ids = Array.from(document.querySelectorAll('#seatList .seat-item'))
+    .map((item) => item.dataset.playerId)
+    .filter(Boolean);
   await api('/api/host/seats','POST',{token,ordered_ids});
 }
 
@@ -70,6 +126,7 @@ async function poll() {
       <div class="grid">${players}</div>
       ${renderSeatEditor(state.players)}
       <p>Morning: ${state.morning_deaths.length ? state.morning_deaths.join(', ') : 'No deaths'}</p>`;
+    setupSeatDragAndDrop();
   } catch (e) { console.error(e); }
 }
 

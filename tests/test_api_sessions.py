@@ -147,3 +147,15 @@ def test_finalize_vote_returns_400_when_votes_missing():
     resp = client.post('/api/host/finalize-vote', json={'token': host_token, 'target': ''})
     assert resp.status_code == 400
     assert 'All connected living players must vote' in resp.text
+
+
+def test_join_rejects_duplicate_player_names_case_insensitive():
+    create = client.post('/api/room/create', json={'host_name': 'Host'}).json()
+    code = create['code']
+
+    first = client.post('/api/room/join', json={'code': code, 'name': 'Alice'})
+    assert first.status_code == 200
+
+    duplicate = client.post('/api/room/join', json={'code': code, 'name': '  alice  '})
+    assert duplicate.status_code == 404
+    assert 'already taken' in duplicate.text
