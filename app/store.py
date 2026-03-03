@@ -36,6 +36,14 @@ class GameStore:
 
     def join_room(self, code: str, name: str) -> tuple[GameRoom, str, str]:
         room = self._get_room(code)
+        normalized_name = name.strip().casefold()
+        active_names = {
+            player.name.strip().casefold()
+            for player in room.players.values()
+            if not player.kicked
+        }
+        if normalized_name in active_names:
+            raise ValueError("Player name is already taken")
         token = self._new_token()
         player = Player(id=self._new_id(), name=name, token=token)
         room.add_player(player)
