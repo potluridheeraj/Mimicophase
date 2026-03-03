@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.store import store
+from app.game import Phase
 
 
 client = TestClient(app)
@@ -45,3 +46,38 @@ def test_host_can_reorder_seats():
 
     state2 = client.get(f'/api/state/{code}', params={'token': j1['token']}).json()
     assert [p['id'] for p in state2['players']] == reordered
+
+
+def test_host_announcement_for_night_phases():
+    create = client.post('/api/room/create', json={'host_name': 'Host'}).json()
+    code = create['code']
+    host_token = create['token']
+    for n in ['A', 'B', 'C', 'D']:
+        client.post('/api/room/join', json={'code': code, 'name': n})
+
+    room = store.rooms[code]
+    room.assign_roles()
+
+    state = client.get(f'/api/state/{code}', params={'token': host_token}).json()
+    assert state['host_announcement']['open_eyes'] == 'Mimicophase'
+    assert state['host_announcement']['action'] == 'Choose one non-Mimicophase player to eliminate.'
+
+    room.phase = Phase.NIGHT_CAPTAIN
+    state = client.get(f'/api/state/{code}', params={'token': host_token}).json()
+    assert state['host_announcement']['close_eyes'] == 'Mimicophase'
+    assert state['host_announcement']['open_eyes'] == 'Captain'
+
+
+def test_host_announcement_includes_close_eyes_prompt_for_morning():
+    create = client.post('/api/room/create', json={'host_name': 'Host'}).json()
+    code = create['code']
+    host_token = create['token']
+    room = store.rooms[code]
+    room.phase = Phase.MORNING
+
+    state = client.get(f'/api/state/{code}', params={'token': host_token}).json()
+    announcement = state['host_announcement']
+
+    assert announcement['close_eyes'] == 'Doctor'
+    assert announcement['open_eyes'] == 'Everyone'
+    assert 'close your eyes' in announcement['text']

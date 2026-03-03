@@ -84,6 +84,58 @@ class TimerSettingsIn(BaseModel):
     runoff_s: int
 
 
+def _host_announcement(room) -> dict:
+    close_eyes = ""
+    open_eyes = ""
+    action = ""
+
+    if room.phase == Phase.NIGHT_MIMIC:
+        open_eyes = "Mimicophase"
+        action = "Choose one non-Mimicophase player to eliminate."
+    elif room.phase == Phase.NIGHT_CAPTAIN:
+        close_eyes = "Mimicophase"
+        open_eyes = "Captain"
+        action = "Inspect one player."
+    elif room.phase == Phase.NIGHT_DOCTOR:
+        close_eyes = "Captain"
+        open_eyes = "Doctor"
+        action = "Protect one player."
+    elif room.phase == Phase.MORNING:
+        close_eyes = "Doctor"
+        open_eyes = "Everyone"
+        action = "Announce morning results."
+    elif room.phase == Phase.DISCUSSION:
+        open_eyes = "Everyone"
+        action = "Start open discussion."
+    elif room.phase == Phase.NOMINATION:
+        open_eyes = "Everyone"
+        action = "Ask for nominations."
+    elif room.phase == Phase.RUNOFF:
+        open_eyes = "Everyone"
+        action = "Run the vote between the nominated players."
+    elif room.phase == Phase.SINGLE_NOMINEE:
+        open_eyes = "Everyone"
+        action = "Vote to execute or reject the single nominee."
+    elif room.phase == Phase.ENDED:
+        open_eyes = "Everyone"
+        action = f"Game ended. Winner: {room.winner or 'unknown'}."
+
+    parts = []
+    if close_eyes:
+        parts.append(f"{close_eyes}, close your eyes.")
+    if open_eyes:
+        parts.append(f"{open_eyes}, open your eyes.")
+    if action:
+        parts.append(action)
+
+    return {
+        "close_eyes": close_eyes,
+        "open_eyes": open_eyes,
+        "action": action,
+        "text": " ".join(parts),
+    }
+
+
 def _room_state(code: str, token: str) -> dict:
     room = store.rooms[code]
     store.refresh_connections(room)
@@ -130,6 +182,7 @@ def _room_state(code: str, token: str) -> dict:
         },
         "morning_deaths": [room.players[pid].name for pid in room.morning_deaths],
         "runoff_candidates": [{"id": pid, "name": room.players[pid].name} for pid in room.runoff_candidates],
+        "host_announcement": _host_announcement(room),
     }
 
 
